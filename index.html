@@ -65,6 +65,9 @@ footer{font-size:11px;color:#65717b;text-align:center;padding:12px}
 .dbtn button{margin:0!important}
 .dlgbox select{width:100%;font-size:16px;padding:10px;border:1px solid #9aa3ad;border-radius:6px;background:#fff;color:#20252b;font-family:inherit}
 .modal button[disabled]{opacity:.4}
+.wxlines{font-size:15px;line-height:1.7;margin:4px 0 8px}.wxlines small{color:#64717b;font-size:12px}
+.wxgrade{border-radius:10px;padding:10px 12px;margin:8px 0;font-size:14px;line-height:1.6;border:1px solid #dce2e7;background:#f3f6f9}
+.wxgrade b{font-size:15px}.wxgrade.g1{background:#eaf3ff;border-color:#b9d4fb}.wxgrade.g2{background:#eaf8ef;border-color:#b6e3c6}.wxgrade.g3{background:#fff8dc;border-color:#f0dd8a}.wxgrade.g4{background:#fff0e0;border-color:#f5c89a}.wxgrade.g5{background:#ffe9e7;border-color:#f3b5b0}.wxgrade.g0{background:#e8f0fb;border-color:#b5c9ea}
 .wxres{border:1px solid #dce2e7;border-radius:8px;padding:2px 10px;margin:6px 0}
 .wxres div{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #eef1f4;font-size:15px}
 .wxres div:last-child{border-bottom:0}
@@ -423,12 +426,13 @@ function setDate(){$('[data-f=date]').value=today()}
 function clearManual(){$$('[data-f=weather],[data-f=feel],[data-f=air]').forEach(e=>{delete e.dataset.manual})}
 ['weather','feel','air'].forEach(k=>{const e=$(`[data-f=${k}]`);['input','change'].forEach(ev=>e.addEventListener(ev,()=>{e.dataset.manual='1'}))});
 const wxStat=t=>{const e=$('#wxStatus');if(e)e.textContent=t};
+let posDetail='';
 function getPos(){
  const once=hi=>new Promise(res=>{
   let done=false;const fin=v=>{if(!done){done=true;res(v)}};
   if(!navigator.geolocation)return fin({ok:false,code:0});
-  setTimeout(()=>fin({ok:false,code:3}),hi?20000:12000);
-  try{navigator.geolocation.getCurrentPosition(p=>fin({ok:true,lat:p.coords.latitude,lon:p.coords.longitude}),e=>fin({ok:false,code:(e&&e.code)||2}),{enableHighAccuracy:hi,timeout:hi?18000:10000,maximumAge:0})}catch(e){fin({ok:false,code:2})}
+  setTimeout(()=>fin({ok:false,code:3}),hi?15000:8000);
+  try{navigator.geolocation.getCurrentPosition(p=>fin({ok:true,lat:p.coords.latitude,lon:p.coords.longitude}),e=>{posDetail=(e&&e.message)||'';fin({ok:false,code:(e&&e.code)||2})},{enableHighAccuracy:hi,timeout:hi?13000:6000,maximumAge:0})}catch(e){fin({ok:false,code:2})}
  });
  return once(false).then(r=>(r.ok||r.code===0||r.code===1)?r:once(true));
 }
@@ -518,7 +522,7 @@ async function fetchKma(loc,key){
    if(isNaN(T))return {ok:false,msg:'기온 값이 없습니다'};
    const feel=r1(kmaFeel(T,RH,V,new Date().getMonth()+1));
    const w=pickWeather({weather_code:PTY?61:0,precipitation:0,wind_speed_10m:V,wind_gusts_10m:0},feel);
-   return {ok:true,weather:w,feel:feel,air:r1(T),time:b.date.slice(4,6)+'/'+b.date.slice(6,8)+' '+b.time.slice(0,2)+':00',source:'기상청 초단기실황'};
+   return {ok:true,rh:RH,weather:w,feel:feel,air:r1(T),time:b.date.slice(4,6)+'/'+b.date.slice(6,8)+' '+b.time.slice(0,2)+':00',source:'기상청 초단기실황'};
   }
   return {ok:false,msg:'기상청 자료가 아직 없습니다'};
  }catch(e){return {ok:false,msg:'연결 실패: '+String((e&&e.message)||e)}}
@@ -532,10 +536,17 @@ async function fetchOM(loc){
   if(!r.ok)throw new Error('http '+r.status);
   c=(await r.json()).current;
   if(!c||c.temperature_2m==null)throw new Error('no data');
- }catch(e){return {ok:false,msg:'날씨를 불러오지 못했습니다. 인터넷 연결을 확인하거나 직접 입력하세요.'}}
+ }catch(e){return {ok:false,msg:'날씨를 불러오지 못했습니다 ('+((e&&e.name==='AbortError')?'시간 초과':((e&&e.message)||'오류'))+'). 인터넷 연결을 확인한 뒤 다시 시도하거나 직접 입력하세요.'}}
  const T=c.temperature_2m,RH=c.relative_humidity_2m==null?50:c.relative_humidity_2m,V=c.wind_speed_10m||0;
  const feel=r1(kmaFeel(T,RH,V,new Date().getMonth()+1));
- return {ok:true,weather:pickWeather(c,feel),feel:feel,air:r1(T),time:String(c.time).slice(5,10).replace('-','/')+' '+String(c.time).slice(11,16),source:'Open-Meteo 예보모델'};
+ return {ok:true,rh:RH,weather:pickWeather(c,feel),feel:feel,air:r1(T),time:String(c.time).slice(5,10).replace('-','/')+' '+String(c.time).slice(11,16),source:'Open-Meteo 예보모델'};
+}
+/* 위치(GPS)를 못 얻을 때: 인터넷 접속 위치(대략)로 대체 */
+async function ipLoc(){
+ const tryJ=async(url,map)=>{try{const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),6000);const r=await fetch(url,{signal:ctl.signal});clearTimeout(tm);return map(await r.json())}catch(e){return null}};
+ let o=await tryJ('https://ipwho.is/',j=>j&&j.success!==false&&j.latitude!=null?{lat:+j.latitude,lon:+j.longitude,name:[j.region,j.city].filter(Boolean).join(' ')}:null);
+ if(!o)o=await tryJ('https://get.geojs.io/v1/ip/geo.json',j=>j&&j.latitude?{lat:+j.latitude,lon:+j.longitude,name:[j.region,j.city].filter(Boolean).join(' ')}:null);
+ return o;
 }
 /* 날씨 가져오기: 인증키가 있으면 기상청 초단기실황, 없거나 실패하면 Open-Meteo */
 async function fetchWx(){
@@ -545,15 +556,16 @@ async function fetchWx(){
  else if(!/^https?:$/.test(location.protocol)){loc={ok:false,code:5}}
  else{
   loc=await getPos();
-  if(loc.ok){const nm=await reverseName(loc.lat,loc.lon);loc.place=(nm||nearName(loc.lat,loc.lon))+' (위도 '+loc.lat.toFixed(2)+', 경도 '+loc.lon.toFixed(2)+')'}
+  if(!loc.ok&&[0,2,3].indexOf(loc.code)>=0){const ip=await ipLoc();if(ip){loc={ok:true,lat:ip.lat,lon:ip.lon,approx:true,place:(ip.name||nearName(ip.lat,ip.lon))+' (대략 위치: 인터넷 접속 기준)'};showFb()}}
+  else if(loc.ok){const nm=await reverseName(loc.lat,loc.lon);loc.place=(nm||nearName(loc.lat,loc.lon))+' (위도 '+loc.lat.toFixed(2)+', 경도 '+loc.lon.toFixed(2)+')'}
  }
  if(!loc.ok){showFb()}
- if(!loc.ok)return {ok:false,msg:(POSMSG[loc.code]||POSMSG[2])+(loc.code===5?'':(window.isSecureContext?'':' 인터넷 주소(https)로 열어야 위치를 쓸 수 있습니다.')+' 아래에서 지역을 직접 선택할 수도 있습니다.')};
+ if(!loc.ok)return {ok:false,msg:(POSMSG[loc.code]||POSMSG[2])+(loc.code===5?'':(window.isSecureContext?'':' 인터넷 주소(https)로 열어야 위치를 쓸 수 있습니다.')+' 아래에서 지역을 직접 선택할 수도 있습니다.')+(posDetail?' ['+posDetail+']':'')};
  let r=null,note='';
  const key=getKmaKey();
  if(key){const k=await fetchKma(loc,key);if(k.ok)r=k;else note='기상청 연결 실패('+k.msg+') → Open-Meteo로 대체'}
  if(!r){r=await fetchOM(loc);if(!r.ok)return {ok:false,msg:(note?note+'. ':'')+r.msg}}
- r.place=loc.place;r.note=note;
+ r.place=loc.place;r.note=(note?note+' · ':'')+(loc.approx?'정확한 위치(GPS)를 얻지 못해 대략 위치로 찾았습니다. 틀리면 아래에서 지역을 선택하세요.':'');
  return r;
 }
 function fillWx(r,force){
@@ -581,17 +593,26 @@ async function autoWeather(force){
 let wxTok=0,wxData=null,wxFb=false;
 function showFb(){wxFb=true;const b=$('#wxRegionBox');if(b)b.style.display=''}
 function wxPop(body,canOk){
- openDlg('날씨 다시 불러오기',body+(wxFb?'<p>날씨 기준 지역 (위치를 못 쓸 때 직접 선택)</p><select id="wxPopRegion">'+regionOpts+'</select>':'')+'<div class="dbtn"><button type="button" data-a="wxok"'+(canOk?'':' disabled')+'>확인</button><button type="button" class="gray" data-a="close">취소</button></div>');
+ openDlg('날씨 다시 불러오기',body+(wxFb?'<p>날씨 기준 지역 (위치를 못 쓸 때 직접 선택)</p><select id="wxPopRegion">'+regionOpts+'</select>':'')+'<div class="dbtn"><button type="button" data-a="wxok"'+(canOk?'':' disabled')+'>확인</button><button type="button" class="gray" data-a="wxretry">다시 시도</button><button type="button" class="gray" data-a="close">취소</button></div>');
  if(wxFb)$('#wxPopRegion').value=$('#wxRegion').value;
+}
+function heatGrade(f){
+ if(f<=-12)return {c:'g0',e:'❄️',n:'한파',m:['체감온도가 -12℃ 이하입니다.','- 방한복·장갑을 착용하고, 따뜻한 휴식 장소와 따뜻한 물을 준비하세요.','- 결빙·빙판 구간 미끄럼과 장시간 옥외작업에 주의하세요.']};
+ if(f>=38)return {c:'g5',e:'🔴',n:'위험',m:['폭염 위험 단계입니다.','- 매시간 15분 이상 휴식하고, 무더위 시간대(14~17시) 옥외작업은 중지를 검토하세요.','- 물·그늘·휴식을 확인하고 작업자 상태를 수시로 살피세요.']};
+ if(f>=35)return {c:'g4',e:'🟠',n:'경고',m:['폭염 경고 단계입니다.','- 매시간 15분 이상 휴식하고, 무더위 시간대(14~17시) 옥외작업을 줄이세요.','- 물·그늘·휴식을 확인하고 작업자 상태를 수시로 살피세요.']};
+ if(f>=33)return {c:'g3',e:'🟡',n:'주의',m:['폭염 주의 단계입니다.','- 매시간 10분 이상 휴식하고, 시원한 물을 자주 마시세요.']};
+ if(f>=31)return {c:'g2',e:'🟢',n:'관심',m:['폭염 관심 단계입니다.','- 물·그늘·휴식을 미리 준비하고 작업하세요.']};
+ return {c:'g1',e:'🔵',n:'양호',m:['현재 기상 조건은 양호한 편입니다.','- 규칙적인 휴식과 기본적인 현장 안전 수칙을 준수하며 작업해 주세요.']};
 }
 async function showWxPopup(){
  const tok=++wxTok;wxData=null;
- wxPop('<p class="hint2">날씨를 불러오는 중…</p>',false);
+ wxPop('<p class="hint2">위치와 날씨를 확인하는 중… (최대 30초 걸릴 수 있습니다)</p>',false);
  const r=await fetchWx();
  if(tok!==wxTok)return;
  if(!r.ok){wxPop('<p class="wxerr">'+esc(r.msg)+'</p>',false);return}
  wxData=r;
- wxPop('<div class="wxres"><div><span>현재 지역</span><b>'+esc(r.place)+'</b></div><div><span>기준 시각</span><b>'+esc(r.time)+'</b></div><div><span>자료 출처</span><b>'+esc(r.source||'')+'</b></div><div><span>기상상황</span><b>'+esc(r.weather)+'</b></div><div><span>체감온도</span><b>'+r.feel+' ℃</b></div><div><span>기온</span><b>'+r.air+' ℃</b></div></div>'+(r.note?'<p class="wxerr">'+esc(r.note)+'</p>':'')+'<p class="hint2">확인을 누르면 기상상황·체감온도·기온만 바뀌고, 다른 내용은 그대로 유지됩니다.</p>',true);
+ const g=heatGrade(Number(r.feel));
+ wxPop('<div class="wxlines"><div>☀️ <b>날씨 정보 연동 결과</b> <small>('+esc(r.source||'')+')</small></div><div>📍 현재 위치: '+esc(r.place)+'</div><div>🌡️ 실제 기온: '+r.air+'℃ | 체감 온도: '+r.feel+'℃</div>'+(r.rh!=null?'<div>💧 현재 습도: '+Math.round(r.rh)+'%</div>':'')+'<div>🌤️ 기상상황: '+esc(r.weather)+'</div><div>🕒 기준 시각: '+esc(r.time)+'</div></div><div class="wxgrade '+g.c+'"><b>'+g.e+' ['+g.n+']</b> '+esc(g.m[0])+g.m.slice(1).map(x=>'<br>'+esc(x)).join('')+'</div>'+(r.note?'<p class="wxerr">'+esc(r.note)+'</p>':'')+'<p class="hint2">확인을 누르면 기상상황·체감온도·기온만 바뀌고, 다른 내용은 그대로 유지됩니다.</p>',true);
 }
 $('#dlg').addEventListener('change',e=>{
  if(e.target.id!=='wxPopRegion')return;
@@ -679,6 +700,7 @@ $('#dlg').addEventListener('click',e=>{
  else if(a==='dosave'){if(doSave($('#saveName').value)){closeDlg();wxStat('저장했습니다: '+curName)}}
  else if(a==='load')loadByName(n);
  else if(a==='wxok'){if(wxData){fillWx(wxData,true);closeDlg()}}
+ else if(a==='wxretry'){showWxPopup()}
  else if(a==='del'){
   if(!confirm('"'+n+'" 저장본을 삭제할까요?'))return;
   putSaves(getSaves().filter(v=>v.n!==n));
