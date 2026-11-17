@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="위험성평가표">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>위험성평가표</title>
+<meta name="theme-color" content="#173f5b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{--ink:#20252b;--line:#9aa3ad;--blue:#eaf2f8;--accent:#174f78}
+*{box-sizing:border-box}
+body{-webkit-text-size-adjust:100%;margin:0;background:#eef1f4;color:var(--ink);font-family:Arial,"Malgun Gothic",sans-serif;line-height:1.45}
+header{background:#173f5b;color:white;padding:18px 20px}
+header h1{margin:0;font-size:22px} header p{margin:5px 0 0;font-size:13px;opacity:.9}
+main{max-width:1100px;margin:20px auto;padding:0 14px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+button{border:0;border-radius:7px;padding:10px 14px;font-size:14px;font-weight:700;cursor:pointer;background:#174f78;color:white;font-family:inherit}
+button.secondary{background:#5c6873} button.danger{background:#a43b35} button.small{padding:6px 10px;font-size:12px}
+.card{background:white;border:1px solid #d7dde2;border-radius:10px;padding:16px;margin-bottom:14px;box-shadow:0 2px 7px #0000000a}
+h2{font-size:17px;margin:0 0 12px;color:#173f5b;border-bottom:2px solid #dbe5ec;padding-bottom:8px}
+h3{font-size:13px;margin:14px 0 7px;color:#173f5b}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.field label{display:block;font-size:12px;font-weight:700;color:#47535e;margin-bottom:4px}
+input[type=text],input[type=date],input[type=number],textarea,select{width:100%;border:1px solid #bac4cc;border-radius:6px;padding:9px;font-size:14px;background:#fff;color:#20252b;font-family:inherit}
+textarea{min-height:68px;resize:vertical}
+.checkgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.check{display:flex;align-items:center;gap:7px;border:1px solid #dce2e7;border-radius:6px;padding:8px;font-size:13px}
+input[type=checkbox]{width:17px;height:17px;flex:0 0 auto;accent-color:#174f78}
+.check .mini{flex:1;min-width:70px;padding:5px 7px;font-size:13px}
+.hint{font-size:12px;color:#64717b;margin:0 0 8px}
+.wxbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}.wxbar .hint{margin:0}
+.risk{border:1px solid #cbd4dc;border-radius:8px;margin:10px 0;overflow:hidden}
+.riskhead{background:#edf3f7;padding:9px 11px;display:flex;gap:10px;align-items:center}
+.riskhead strong{flex:1}
+.riskbody{padding:11px}
+.riskbody h4{font-size:12px;margin:0 0 6px;color:#47535e}
+.riskbody .checkgrid{grid-template-columns:1fr;margin-bottom:8px}
+footer{font-size:11px;color:#65717b;text-align:center;padding:12px}
+.modal{position:fixed;inset:0;background:#000c;z-index:20;display:none;flex-direction:column;align-items:center;padding:12px;overflow:auto}
+.modal.show{display:flex}
+.modal img{max-width:100%;background:#fff}
+.modal p{color:#fff;font-size:14px;text-align:center}
+.modal a,.modal button{margin:6px;padding:10px 16px;border-radius:7px;border:0;background:#1a73e8;color:#fff;font-weight:700;text-decoration:none;font-size:15px}
+.curname{font-size:13px;color:#47535e;margin:-4px 0 12px;font-weight:700}
+.modal.dlg{justify-content:center}
+.dlgbox{background:#fff;color:#20252b;border-radius:10px;padding:16px;width:min(440px,100%);margin:auto}
+.dlgbox h3{margin:0 0 10px;font-size:17px;color:#173f5b}
+.modal .dlgbox p{color:#20252b;text-align:left;font-size:13px;margin:8px 0 4px;font-weight:700}
+.modal .dlgbox p.hint2{font-weight:400;color:#64717b;font-size:12px}
+.dlgbox input[type=text]{width:100%;border:1px solid #9aa3ad;border-radius:6px;padding:10px;font-size:16px;font-family:inherit}
+.slist{max-height:45vh;overflow:auto;margin:8px 0;border:1px solid #dce2e7;border-radius:8px}
+.srow{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid #eef1f4}
+.srow:last-child{border-bottom:0}
+.srow .nm{flex:1;min-width:0;word-break:break-all;font-size:14px;cursor:pointer}
+.srow small{display:block;color:#64717b;font-size:11px}
+.modal .srow button{margin:0;padding:7px 10px;font-size:12px}
+.modal button.del{background:#a43b35}.modal button.gray{background:#5c6873}
+.dbtn{display:flex;justify-content:flex-end;gap:4px;margin-top:6px}
+.dbtn button{margin:0!important}
+.dlgbox select{width:100%;font-size:16px;padding:10px;border:1px solid #9aa3ad;border-radius:6px;background:#fff;color:#20252b;font-family:inherit}
+.modal button[disabled]{opacity:.4}
+.wxres{border:1px solid #dce2e7;border-radius:8px;padding:2px 10px;margin:6px 0}
+.wxres div{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #eef1f4;font-size:15px}
+.wxres div:last-child{border-bottom:0}
+.wxres span{color:#64717b;flex:0 0 auto}.wxres b{text-align:right;word-break:keep-all}
+.modal .dlgbox p.wxerr{color:#a43b35;font-weight:700}
+details.kmakey{margin-top:10px;border:1px solid #dce2e7;border-radius:8px;padding:8px 10px}
+details.kmakey summary{cursor:pointer;font-weight:700;font-size:13px;color:#173f5b}
+details.kmakey input{margin-top:6px}
+@media(max-width:720px){input,select,textarea{font-size:16px!important}}
+@media(max-width:720px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.checkgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.grid,.grid2,.checkgrid{grid-template-columns:1fr}main{padding:0 8px}.card{padding:12px}}
+</style>
+<style id="sheetcss">
+.sheet{width:794px;box-sizing:border-box;background:#fff;padding:12px 16px 10px;color:#111;font-family:"Malgun Gothic","Noto Sans KR","Apple SD Gothic Neo",sans-serif;font-size:10.5px;line-height:1.3}
+.sheet *{box-sizing:border-box}
+.title{position:relative;height:50px;text-align:center}
+.title h1{margin:2px 0 0;font-size:21px;font-weight:800;text-decoration:underline;color:#222}
+.title small{display:block;font-size:10px;color:#444}
+.sheet table{border-collapse:collapse;width:100%;table-layout:fixed}
+.sheet td,.sheet th{border:1px solid #222;padding:2px 4px;font-size:10.5px;vertical-align:middle;font-weight:400}
+.sheet .h{background:#cfe3f1;text-align:center;font-weight:700}
+.sheet .gap{margin-top:5px}
+.ck{display:flex;align-items:flex-start;line-height:1.3;margin:1px 0}
+.cb{display:inline-block;flex:0 0 auto;width:10px;height:10px;border:1.2px solid #222;background:#fff;margin:2px 4px 0 0;position:relative}
+.cb.on::after{content:"";position:absolute;left:2px;top:-5px;width:5px;height:11px;border:solid #000;border-width:0 2.6px 2.6px 0;transform:rotate(40deg)}
+.row{display:flex;flex-wrap:wrap;gap:1px 10px}
+.bl{color:#1d5fc4}
+.sm{font-size:7.5px;margin-left:2px;vertical-align:top}
+.in{display:inline-block;min-width:44px;min-height:14px;font-weight:700;font-size:13px;color:#000}
+.in.w{display:block;width:100%;min-height:22px;font-size:15px}
+.in.ml{display:block;width:100%;min-height:34px;white-space:pre-wrap;font-size:13px}
+.in.s{min-width:40px;font-size:10.5px}
+.g3{display:grid;grid-template-columns:34% 33% 33%}
+.nt{text-align:right;font-size:9px;margin:3px 0 1px;color:#222}
+.ic{text-align:center;padding:2px}
+.ic svg{display:block;margin:0 auto}
+.foot{font-size:9.5px;margin-top:3px;color:#222}
+</style>
+</head>
+<body>
+<header><h1>현장 위험성 평가표 작성</h1><p>작업 전 위험요인을 확인하고 안전대책을 선택한 뒤 저장하세요. JPG는 종이 양식(A4 한 장, 컬러)으로 저장됩니다.</p></header>
+<main>
+<div class="toolbar">
+ <button onclick="saveForm()">현재 내용 저장</button>
+ <button class="secondary" onclick="saveAs()">다른 이름으로 저장</button>
+ <button class="secondary" onclick="loadForm()">저장 내용 불러오기</button>
+ <button class="secondary" onclick="exportJpg()">A4 JPG 파일 저장</button>
+ <button class="danger" onclick="resetForm()">새 평가표</button>
+</div>
+<div class="curname" id="curName"></div>
+<div id="form"></div>
+<footer>현장 위험성 평가표 · 작성한 내용은 이 기기의 브라우저에 저장됩니다.</footer>
+</main>
+
+<div class="modal" id="modal">
+ <p>저장이 자동으로 안 되면 아래 이미지를 길게 눌러 저장하거나 '공유 / 사진에 저장'을 누르세요.</p>
+ <img id="mimg" alt="">
+ <div><button type="button" id="mshare" style="display:none">공유 / 사진에 저장</button><a id="mdl" download="평가표.jpg">다운로드</a><button onclick="document.getElementById('modal').classList.remove('show')">닫기</button></div>
+</div>
+
+<div class="modal dlg" id="dlg"><div class="dlgbox"><h3 id="dlgT"></h3><div id="dlgB"></div></div></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const N=a=>a.map(x=>typeof x==='string'?{t:x}:x);
+const plain=it=>it.t+(it.sm?' ('+it.sm+')':'')+(it.t2||'');
+
+/* ---------- 항목 데이터 (종이 양식 기준) ---------- */
+const WX=['맑음','강풍','비/눈','폭염','한파'];
+const EQ=N(['크레인'].map(t=>({t,x:1})).concat(['스카이','시저형 고소작업대','사다리차','지게차','덤프트럭','굴착기','펌프카','믹서트럭'],[{t:'기타',x:1}]));
+const SITE=N(['도로 가장 차선','도로 중앙 차선(사이 차선, 교차로 포함)','골목길/농로/비포장','실내(건물 안)','천정 내 작업','높은 층고(5m 이상)','건물(아파트) 내 지하 주차장','자재, 공구도구 낙하위험(시민재해)','도로변/터널/지하차도','전력선, 변압기 근접','특고압 방호관 설치 국소(미설치 작업중지)',{t:'기타',x:1}]);
+const CM=N(['개인보호구 착용 및 주변 동료 보호구 착용 상태 확인','건설장비 안전장치 확인(고소차, 굴착기, 크레인 등)','팀원 건강상태 / 컨디션 확인','공도구 사용 전 점검','작업중지 기준 준수(폭염/한파/강풍/강우/강설)',{t:'작업장 유해 위험요인 확인',sm:'유해충 및 구조물(고정,균열 상태)'},'중량물 정보 및 취급에 관한 사항 확인']);
+const HOT=N(['온습도계','얼음물','아이스박스','식염정','휴게시설(파라솔 등)',{t:'기타',x:1}]);
+const COLD=N(['핫팩','발열조끼',{t:'기타',x:1}]);
+const PLACE=N(['건물(옥상)','건물(옥탑)','전주','철탑','강관주','인빌딩(RF)',{t:'기타',x:1}]);
+const RISKS=[
+ {t:'떨어짐',sub:[],ic:'fall',c:N([{t:'전주 균열/전주 수직상태 확인',sm:'위험확인시 작업중지권 사용'},'수직사다리 고정 상태 확인 및 수직 생명줄 또는 안전블럭 설치','난간이 없는 옥상/옥탑/경사지붕 수평 생명줄 또는 안전블럭 설치','고소작업 시 안전고리 체결 및 경간 이동 시 이중 안전고리 교차 체결'])},
+ {t:'떨어짐(이동식 사다리)',sub:N([{t:'사다리 상부 걸터서기(자세) 작업',bl:1}]),ic:'ladder',c:N(['사다리 상부 고정 및 아웃트리거 설치',{t:'사다리 안전작업 지침 준수',sm:'2인1조, 최상단 및 차상단 작업금지, 안전고리 체결'},{t:'사다리 작업중 가로질러 넘어가는 과정에서 안전대 체결',sm:'관리감독자에게 보고',bl:1}])},
+ {t:'주행차량에 의한 교통사고',sub:[],ic:'car',c:N([{t:'안전시설물 설치 또는 차단 전문업체 활용',sm:'에어로봇, 안전표지판, 방호차량, 컬러콘'},'신호수 배치 및 신호체계 확인'])},
+ {t:'건설장비에 부딪힘/끼임',sub:[],ic:'exca',c:N(['장비 유도자 배치 및 운전원과 신호체계 확인','작업반경 내 접근금지'])},
+ {t:'넘어짐(인력/건설장비)',sub:[],ic:'crane',c:N(['이동통로 정리정돈, 결빙/물기 제거','작업 전 지반상태 확인','건설장비는 허용된 제원 내 운행','아웃트리거 수평인출 및 받침대 설치','작업차량 고임목 설치'])},
+ {t:'감전',sub:[],ic:'elec',c:N([{t:'감전위험에 노출된 환경',sm:'전주,전원활동',t2:' 작업전 검전기로 누설전류 확인'},'특고압 3m 이상 이격 확인','노출형 변압기 펜스 내 접근 금지'])},
+ {t:'낙하물 발생',sub:[],ic:'drop',c:N(['작업반경 내 또는 상부작업 시 직하단 접근금지(통제)','승인된 인양도구 사용(슬링벨트, 와이어, 샤클 등)','장비 설치 시 낙하물 방지망/삼각틀/도르래/안전블럭/체인블럭 등 설치','공구 이탈방지 끈줄 사용'])},
+ {t:'화재, 폭발',sub:[],ic:'fire',c:N(['화기작업 주변 인화물 제거, 소화기 비치','불티 발생 작업 시 불티비산방지포 사용','작업 중 흡연 금지'])}
+];
+
+/* ---------- 입력 화면 (기존 방식) ---------- */
+const FIELDS=[
+ ['partner','협력사명','text'],['contractor','도급사명','text','SKO 충청 Acc.'],['date','작성일자','date'],['project','국소명','text'],
+ ['worktype','작업공종','text'],['workers','투입 인원','text','','예: 홍길동, 김철수'],['weather','기상상황','select'],['feel','체감온도 (℃)','number'],
+ ['air','기온 (℃)','number'],['signal','신호수','text'],['guide','유도자','text'],['partnerTel','협력사 비상연락망','text'],
+ ['mgrTel','도급사 관리감독자 비상연락망','text','이정훈(010-5459-3793)']
+];
+const fieldHTML=([id,label,type,def,ph])=>{
+ const inp=type==='select'?`<select data-f="${id}"><option value="">선택</option>${WX.map(w=>`<option>${w}</option>`).join('')}</select>`
+  :`<input type="${type}" data-f="${id}" ${def?`data-def="${esc(def)}"`:''} ${ph?`placeholder="${esc(ph)}"`:''} ${type==='number'?'step="0.1"':''}>`;
+ return `<div class="field"><label>${label}</label>${inp}</div>`;
+};
+const chkHTML=(g,items)=>items.map((it,i)=>`<label class="check"><input type="checkbox" data-k="${g}:${i}"><span>${esc(plain(it))}</span>${it.x?`<input type="text" class="mini" data-x="${g}:${i}" placeholder="내용 입력">`:''}</label>`).join('');
+const riskHTML=(r,i)=>`<div class="risk"><div class="riskhead"><input type="checkbox" data-k="r${i}:h" aria-label="위험요인 선택"><strong>${esc(r.t)}</strong></div><div class="riskbody">${r.sub.length?`<h4>위험요인 / 확인사항</h4><div class="checkgrid">${r.sub.map((s,j)=>`<label class="check"><input type="checkbox" data-k="r${i}:s${j}"><span>${esc(plain(s))}</span></label>`).join('')}</div>`:''}<h4>안전대책</h4><div class="checkgrid">${r.c.map((c,j)=>`<label class="check"><input type="checkbox" data-k="r${i}:c${j}"><span>${esc(plain(c))}</span></label>`).join('')}</div></div></div>`;
+
+const REGIONS=[
+['특별시·광역시·세종',[['서울',37.57,126.98],['부산',35.18,129.08],['대구',35.87,128.60],['인천',37.46,126.71],['광주',35.16,126.85],['대전',36.35,127.38],['울산',35.54,129.31],['세종',36.48,127.29]]],
+['충청북도',[['청주',36.64,127.49],['충주',36.99,127.93],['제천',37.13,128.19],['보은',36.49,127.73],['옥천',36.31,127.57],['영동',36.17,127.78],['증평',36.78,127.58],['진천',36.86,127.44],['괴산',36.82,127.79],['음성',36.94,127.69],['단양',36.98,128.37]]],
+['충청남도',[['천안',36.82,127.15],['공주',36.45,127.12],['보령',36.33,126.61],['아산',36.79,127.00],['서산',36.78,126.45],['논산',36.19,127.10],['계룡',36.27,127.25],['당진',36.89,126.65],['금산',36.11,127.49],['부여',36.28,126.91],['서천',36.08,126.69],['청양',36.46,126.80],['홍성',36.60,126.66],['예산',36.68,126.85],['태안',36.75,126.30]]],
+['경기도',[['수원',37.26,127.03],['성남',37.42,127.13],['고양',37.66,126.83],['용인',37.24,127.18],['부천',37.50,126.77],['안산',37.32,126.83],['안양',37.39,126.95],['남양주',37.64,127.22],['화성',37.20,126.83],['평택',36.99,127.11],['의정부',37.74,127.05],['파주',37.76,126.78],['시흥',37.38,126.80],['김포',37.62,126.72],['이천',37.27,127.44],['안성',37.01,127.28]]],
+['강원도',[['춘천',37.88,127.73],['원주',37.34,127.95],['강릉',37.75,128.88],['속초',38.21,128.59],['동해',37.52,129.11],['삼척',37.45,129.17],['태백',37.16,128.99]]],
+['경상북도',[['포항',36.02,129.34],['경주',35.86,129.22],['구미',36.12,128.34],['안동',36.57,128.73],['김천',36.14,128.11],['영주',36.81,128.62],['상주',36.41,128.16],['영천',35.97,128.94],['경산',35.83,128.74]]],
+['경상남도',[['창원',35.23,128.68],['진주',35.18,128.11],['김해',35.23,128.88],['양산',35.34,129.04],['거제',34.88,128.62],['통영',34.85,128.43],['사천',35.00,128.06],['밀양',35.50,128.75]]],
+['전라북도',[['전주',35.82,127.15],['군산',35.97,126.74],['익산',35.95,126.96],['정읍',35.57,126.86],['남원',35.42,127.39],['김제',35.80,126.88]]],
+['전라남도',[['목포',34.81,126.39],['여수',34.76,127.66],['순천',34.95,127.49],['나주',35.02,126.71],['광양',34.94,127.70]]],
+['제주도',[['제주',33.50,126.53],['서귀포',33.25,126.56]]]
+];
+const regionOpts='<option value="">현재 위치 (자동)</option>'+REGIONS.map(g=>'<optgroup label="'+g[0]+'">'+g[1].map(r=>'<option value="'+r[1]+','+r[2]+','+r[0]+'">'+r[0]+'</option>').join('')+'</optgroup>').join('');
+$('#form').innerHTML=`
+<section class="card"><h2>1. 기본 정보</h2><div class="grid">${FIELDS.map(fieldHTML).join('')}</div><div class="field" id="wxRegionBox" style="margin-top:10px;display:none"><label>날씨 기준 지역 (위치를 못 쓸 때만)</label><select id="wxRegion">${regionOpts}</select></div><div class="wxbar"><button type="button" class="secondary small" id="wxBtn">날씨 다시 불러오기</button><span class="hint" id="wxStatus"></span></div><p class="hint" style="margin-top:6px">열면 현재 위치로 날씨를 찾아 팝업으로 보여 줍니다. 확인을 누르면 기상상황·체감온도·기온이 입력됩니다. 틀리면 직접 고치세요.</p></section>
+<section class="card"><h2>2. 건설장비</h2><p class="hint">사용하는 장비를 체크하세요. 상시 운영장비 외 사용 시 운전원 TBM, 안전교육 실시, 체크리스트 활용 장비점검 실시</p><div class="checkgrid">${chkHTML('eq',EQ)}</div></section>
+<section class="card"><h2>3. 현장 특성 및 작업 환경</h2><div class="checkgrid">${chkHTML('site',SITE)}</div><div class="field" style="margin-top:10px"><label>현장 특이사항</label><textarea data-f="siteNote" placeholder="작업 공간, 주변 설비, 통행 상황 등"></textarea></div></section>
+<section class="card"><h2>4. 공통 안전 확인사항</h2><div class="checkgrid">${chkHTML('cm',CM)}</div><h3>혹서기 용품 지참유무</h3><div class="checkgrid">${chkHTML('hot',HOT)}</div><h3>혹한기 용품 지참유무</h3><div class="checkgrid">${chkHTML('cold',COLD)}</div></section>
+<section class="card"><h2>5. 작업 장소 (작업 전 확인 내용)</h2><div class="checkgrid">${chkHTML('pl',PLACE)}</div></section>
+<section class="card"><h2>6. 작업별 위험요인 및 안전대책</h2><p class="hint">해당 위험요인을 체크하고 안전대책을 선택하세요.</p>${RISKS.map(riskHTML).join('')}</section>
+<section class="card"><h2>7. 추가 위험요인 및 대책 (체크항목 외)</h2><div class="field"><label>추가 위험요인</label><textarea data-f="extraHazard"></textarea></div><div class="field" style="margin-top:8px"><label>추가 안전대책</label><textarea data-f="extraControl"></textarea></div></section>`;
+
+// 텍스트를 입력하면 해당 체크가 자동으로 켜짐
+$$('[data-x]').forEach(t=>t.addEventListener('input',()=>{const c=$(`[data-k="${t.dataset.x}"]`);if(c&&t.value.trim())c.checked=true}));
+
+/* ---------- 상태 수집 / 적용 ---------- */
+function collect(){
+ const f={},c={},x={};
+ $$('[data-f]').forEach(e=>f[e.dataset.f]=e.value);
+ $$('[data-k]').forEach(e=>c[e.dataset.k]=e.checked);
+ $$('[data-x]').forEach(e=>x[e.dataset.x]=e.value);
+ return {f,c,x};
+}
+function apply(d){
+ if(!d)return;
+ $$('[data-f]').forEach(e=>{if(d.f&&d.f[e.dataset.f]!==undefined)e.value=d.f[e.dataset.f]});
+ $$('[data-k]').forEach(e=>e.checked=!!(d.c&&d.c[e.dataset.k]));
+ $$('[data-x]').forEach(e=>e.value=(d.x&&d.x[e.dataset.x])||'');
+}
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+function defaults(){
+ $$('[data-f]').forEach(e=>e.value=e.dataset.def||'');
+ $$('[data-k]').forEach(e=>e.checked=false);
+ $$('[data-x]').forEach(e=>e.value='');
+ $('[data-f=date]').value=today();
+}
+defaults();
+function resetForm(){if(!confirm('현재 입력 내용을 지우고 새 평가표를 시작할까요?'))return;defaults();clearManual();setDate();curName='';showName();autoWeather(true);scrollTo(0,0)}
+
+/* ---------- 위험 그림 ---------- */
+const fr=i=>`<svg viewBox="0 0 64 50" width="62" height="48" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="61" height="47" rx="4" fill="#f6c619" stroke="#a3211b" stroke-width="2.5"/><g stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">${i}</g></svg>`;
+const P=(x,y,a=0)=>`<circle cx="${x}" cy="${y}" r="3.3" fill="#111"/><path d="M${x} ${y+4}L${x+a} ${y+14}M${x-7} ${y+9}L${x} ${y+7}L${x+7} ${y+9}M${x+a} ${y+14}L${x+a-5} ${y+23}M${x+a} ${y+14}L${x+a+5} ${y+22}"/>`;
+const PIC={
+ warn:`<svg viewBox="0 0 64 56" width="54" height="48" xmlns="http://www.w3.org/2000/svg"><path d="M32 5L60 52H4Z" fill="#fff" stroke="#d32f2f" stroke-width="6" stroke-linejoin="round"/><rect x="29" y="20" width="6" height="17" rx="2" fill="#111"/><circle cx="32" cy="44" r="3.5" fill="#111"/></svg>`,
+ fall:fr(`<path d="M46 5V46M38 10H54M40 46H52"/>`+P(20,12,6)),
+ ladder:fr(`<path d="M34 46L42 6M46 46L54 6M36.5 38H48.5M38.5 29H50.5M40.5 20H52.5M42 12H54"/>`+P(17,12,6)),
+ car:fr(`<path d="M24 28H58V39H24ZM30 28L35 20H50L54 28"/><circle cx="32" cy="40" r="4" fill="#111"/><circle cx="50" cy="40" r="4" fill="#111"/>`+P(12,8,3)),
+ exca:fr(`<rect x="30" y="38" width="28" height="7" rx="3.5" fill="#111"/><path d="M34 38V28H46V38M46 30L56 16L48 10M56 16L60 22"/>`+P(12,8,3)),
+ crane:fr(`<path d="M4 38H44V30H34L30 24H20V38"/><circle cx="14" cy="42" r="3.5" fill="#111"/><circle cx="36" cy="42" r="3.5" fill="#111"/><path d="M22 28L50 6M50 6V14"/>`+P(54,15,2)),
+ elec:fr(`<path d="M44 5V46M36 10H52M38 46H50"/><path d="M26 6L16 24H24L18 44L34 20H26L32 6Z" fill="#111"/>`),
+ drop:fr(`<circle cx="30" cy="30" r="3.6" fill="#111"/><path d="M25 29A5 5 0 0 1 35 29Z" fill="#111"/><path d="M30 34V42M23 38L30 36L37 38M30 42L26 47M30 42L34 47"/><rect x="40" y="8" width="9" height="6" fill="#111"/><rect x="16" y="12" width="7" height="7" fill="#111"/><path d="M44 17V24M20 22V27"/>`),
+ fire:fr(`<path d="M34 6C36 15 44 19 42 30C41 36 37 40 33 40C28 40 25 36 25 31C25 25 31 22 34 6Z" fill="#111"/><rect x="47" y="36" width="12" height="9" fill="#111"/>`+P(12,8,3))
+};
+
+/* ---------- 종이 양식(컬러 A4 한 장) 만들기 ---------- */
+function sheetHTML(st){
+ const box=(on,inner,cls)=>`<div class="ck${cls?' '+cls:''}"><i class="cb${on?' on':''}"></i><span>${inner}</span></div>`;
+ const ck=(g,i,it)=>{
+  const k=g+':'+i;
+  const x=it.x?`(<span class="in s">${esc(st.x[k]||'')}</span>)`:'';
+  return box(st.c[k],esc(it.t)+(it.sm?`<span class="sm">${esc(it.sm)}</span>`:'')+(it.t2?esc(it.t2):'')+x,it.bl?'bl':'');
+ };
+ const cks=(g,items,a=0,b=items.length)=>items.slice(a,b).map((it,j)=>ck(g,a+j,it)).join('');
+ const f=k=>esc(st.f[k]);
+ const [Y,M,D]=(st.f.date||'').split('-');
+ const wx=WX.map(w=>box(st.f.weather===w,esc(w))).join('');
+ const rows=RISKS.map((r,i)=>{
+  const place=i===0?`<td class="h" rowspan="${RISKS.length}" style="vertical-align:top;padding-top:10px">작업 전<br>확인 내용<div style="font-weight:400;text-align:left;margin-top:40px">${cks('pl',PLACE)}</div></td>`:'';
+  const hz=ck('r'+i,'h',{t:r.t})+r.sub.map((s,j)=>`<div style="margin-left:12px">${ck('r'+i,'s'+j,s)}</div>`).join('');
+  return `<tr>${place}<td>${hz}</td><td class="ic">${PIC[r.ic]}</td><td>${r.c.map((c,j)=>ck('r'+i,'c'+j,c)).join('')}</td></tr>`;
+ }).join('');
+ return `<div class="sheet" id="sheet">
+<div class="title"><h1>현장 위험성 평가표(A형)</h1><small>(Field Level Risk Assessment)</small>
+</div>
+<table>
+<colgroup><col style="width:11%"><col style="width:22%"><col style="width:11%"><col style="width:18%"><col style="width:9%"><col style="width:29%"></colgroup>
+<tr><td class="h">협력사명</td><td><div class="in w">${f('partner')}</div></td><td class="h">도급사명</td><td style="text-align:center"><div class="in w">${f('contractor')}</div></td><td class="h">일시</td><td style="white-space:nowrap">&nbsp;<span class="in" style="min-width:34px;text-align:center">${esc(Y||'')}</span>년 <span class="in" style="min-width:22px;text-align:center">${M?Number(M):''}</span>월 <span class="in" style="min-width:22px;text-align:center">${D?Number(D):''}</span>일</td></tr>
+<tr><td class="h">국소명</td><td colspan="3"><div class="in w">${f('project')}</div></td><td class="h">작업공종</td><td><div class="in w">${f('worktype')}</div></td></tr>
+<tr><td class="h">투입 인원</td><td colspan="5"><div class="in w" style="min-height:30px;font-size:17px">${f('workers')}</div></td></tr>
+<tr><td class="h">기상현황</td><td colspan="3"><div class="row">${wx}</div></td><td colspan="2" style="white-space:nowrap">체감온도 : <span class="in" style="min-width:34px">${f('feel')}</span>℃ &nbsp; 기온 : <span class="in" style="min-width:34px">${f('air')}</span>℃</td></tr>
+<tr><td class="h" rowspan="2">건설장비</td><td colspan="3" rowspan="2"><div class="row">${cks('eq',EQ)}</div><div class="bl" style="font-size:9px;margin-top:2px">※ 상시 운영장비 외 사용 시 : 운전원 TBM, 안전교육 실시, 체크리스트 활용 장비점검 실시</div></td><td class="h">신호수</td><td><div class="in w">${f('signal')}</div></td></tr>
+<tr><td class="h">유도자</td><td><div class="in w">${f('guide')}</div></td></tr>
+<tr><td class="h">협력사<br>비상연락망</td><td colspan="2"><div class="in w">${f('partnerTel')}</div></td><td class="h" colspan="2">도급사 관리감독자<br>비상연락망</td><td style="text-align:center"><div class="in w">${f('mgrTel')}</div></td></tr>
+</table>
+<div class="nt">※ 해당항목에 √ 표기 요망(중복 표기 가능)</div>
+<table>
+<colgroup><col style="width:11%"><col style="width:89%"></colgroup>
+<tr><td class="h">현장특성</td><td><div class="g3"><div>${cks('site',SITE,0,4)}</div><div>${cks('site',SITE,4,8)}</div><div>${cks('site',SITE,8,12)}</div></div><div style="font-size:10px;margin-top:4px">[현장 특이 사항]</div><div class="in ml">${f('siteNote')}</div></td></tr>
+</table>
+<table class="gap">
+<colgroup><col style="width:11%"><col style="width:36%"><col style="width:7%"><col style="width:17%"><col style="width:7%"><col style="width:22%"></colgroup>
+<tr><td class="h">공통사항</td><td>${cks('cm',CM)}</td><td class="h">혹서기<br>용품<br>지참유무</td><td>${cks('hot',HOT)}</td><td class="h">혹한기<br>용품<br>지참유무</td><td>${cks('cold',COLD)}</td></tr>
+</table>
+<table class="gap">
+<colgroup><col style="width:11%"><col style="width:33%"><col style="width:12%"><col style="width:44%"></colgroup>
+<tr><td class="h" style="background:#fff"></td><td class="h">위험요인</td><td class="h">그림</td><td class="h">안전대책</td></tr>
+<tr><td class="h">추가<br>위험요인 및 대책<br>(체크항목 외)</td><td><div class="in ml" style="min-height:40px;font-size:16px">${f('extraHazard')}</div></td><td class="ic">${PIC.warn}</td><td><div class="in ml" style="min-height:40px;font-size:16px">${f('extraControl')}</div></td></tr>
+${rows}
+</table>
+<div class="foot">※ 산업안전보건법 제52조 : 사고의 위험이 있는 급박한 상황에서의 작업중지는 근로자의 권리입니다.</div>
+</div>`;
+}
+
+/* ---------- JPG 저장 (인터넷 연결 불필요) ---------- */
+function fname(){return '현장위험성평가_'+($('[data-f=date]').value||'작성본')+'.jpg'}
+const IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+/* 화면 요소를 직접 캔버스에 그림 (iPhone Safari에서도 동작하도록 foreignObject를 쓰지 않음) */
+async function paintSheet(sheet,W,H,CW,CH){
+ const cv=document.createElement('canvas');cv.width=CW;cv.height=CH;
+ const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,CW,CH);
+ const r=Math.min(CW/W,CH/H);x.save();x.scale(r,r);
+ const o=sheet.getBoundingClientRect(),ox=o.left,oy=o.top;
+ const inSvg=e=>e.tagName.toLowerCase()!=='svg'&&!!e.closest('svg');
+ const els=[sheet,...sheet.querySelectorAll('*')].filter(e=>!inSvg(e)&&e.tagName!=='STYLE');
+ for(const e of els){
+  const bg=getComputedStyle(e).backgroundColor;
+  if(bg&&bg!=='rgba(0, 0, 0, 0)'&&bg!=='transparent'){const b=e.getBoundingClientRect();x.fillStyle=bg;x.fillRect(b.left-ox,b.top-oy,b.width,b.height)}
+ }
+ for(const e of els){
+  const cs=getComputedStyle(e),b=e.getBoundingClientRect(),cell=e.tagName==='TD'||e.tagName==='TH';
+  for(const S of ['Top','Right','Bottom','Left']){
+   const w=parseFloat(cs['border'+S+'Width']),st=cs['border'+S+'Style'];
+   if(!(w>0)||st==='none'||st==='hidden')continue;
+   const h=cell?0:w/2;let X1,Y1,X2,Y2;
+   if(S==='Top'){X1=b.left;X2=b.right;Y1=Y2=b.top+h}
+   else if(S==='Bottom'){X1=b.left;X2=b.right;Y1=Y2=b.bottom-h}
+   else if(S==='Left'){Y1=b.top;Y2=b.bottom;X1=X2=b.left+h}
+   else{Y1=b.top;Y2=b.bottom;X1=X2=b.right-h}
+   x.strokeStyle=cs['border'+S+'Color'];x.lineWidth=w;x.lineCap='butt';x.beginPath();x.moveTo(X1-ox,Y1-oy);x.lineTo(X2-ox,Y2-oy);x.stroke();
+  }
+ }
+ $$('.cb.on',sheet).forEach(c=>{
+  const b=c.getBoundingClientRect(),bx=b.left-ox,by=b.top-oy;
+  x.strokeStyle='#000';x.lineWidth=2.3;x.lineCap='round';x.lineJoin='round';
+  x.beginPath();x.moveTo(bx+1.2,by+5);x.lineTo(bx+4,by+8.3);x.lineTo(bx+10.5,by-3);x.stroke();
+ });
+ await Promise.all($$('svg',sheet).filter(s=>!s.parentElement.closest('svg')).map(sv=>new Promise(res=>{
+  const b=sv.getBoundingClientRect(),im=new Image();
+  im.onload=()=>{x.drawImage(im,b.left-ox,b.top-oy,b.width,b.height);res()};im.onerror=()=>res();
+  im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(sv));
+ })));
+ const tw=document.createTreeWalker(sheet,NodeFilter.SHOW_TEXT);
+ let n;
+ while((n=tw.nextNode())){
+  const t=n.nodeValue,p=n.parentElement;
+  if(!t.trim()||inSvg(p)||p.closest('svg')||p.tagName==='STYLE')continue;
+  const cs=getComputedStyle(p),fs=parseFloat(cs.fontSize);
+  x.font=cs.fontStyle+' '+cs.fontWeight+' '+cs.fontSize+' '+cs.fontFamily;
+  x.fillStyle=cs.color;x.textBaseline='middle';
+  const ul=(cs.textDecorationLine||'').indexOf('underline')>=0;
+  const rg=document.createRange();let line='',lx=0,ly=0,lt=null;
+  const flush=()=>{
+   if(line.trim()){
+    x.fillText(line,lx-ox,ly-oy);
+    if(ul){const wd=x.measureText(line).width;x.fillRect(lx-ox,ly-oy+fs*0.47,wd,Math.max(1,fs/16))}
+   }
+   line='';
+  };
+  for(let i=0;i<t.length;i++){
+   rg.setStart(n,i);rg.setEnd(n,i+1);
+   const rc=rg.getClientRects()[0];
+   if(!rc||(rc.width===0&&rc.height===0))continue;
+   if(lt===null||Math.abs(rc.top-lt)>2){flush();lt=rc.top;lx=rc.left;ly=rc.top+rc.height/2}
+   line+=t[i];
+  }
+  flush();
+ }
+ x.restore();
+ return cv;
+}
+function inkOK(cv){
+ try{const d=cv.getContext('2d').getImageData(0,0,cv.width,600).data;let k=0;for(let i=0;i<d.length;i+=160){if(d[i]<120)k++}return k>150}
+ catch(e){return false}
+}
+function dataURLtoFile(u,name){
+ const b=atob(u.split(',')[1]),a=new Uint8Array(b.length);
+ for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);
+ return new File([a],name,{type:'image/jpeg'});
+}
+async function exportJpg(){
+ let host=null;
+ try{
+  const W=794,CW=2480,CH=3508,css=$('#sheetcss').textContent;
+  const holder=document.createElement('div');holder.innerHTML=sheetHTML(collect());
+  const clone=holder.firstElementChild;
+  host=document.createElement('div');
+  host.style.cssText='position:absolute;left:-9999px;top:0;width:794px';
+  const st=document.createElement('style');st.textContent=css;
+  host.appendChild(st);host.appendChild(clone);document.body.appendChild(host);
+  const H=Math.ceil(clone.getBoundingClientRect().height);
+  let cv=null;
+  if(!IOS&&!window.__forcePaint){
+   try{
+    const cssEsc=css.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    const xml=new XMLSerializer().serializeToString(clone);
+    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'"><foreignObject x="0" y="0" width="'+W+'" height="'+H+'"><div xmlns="http://www.w3.org/1999/xhtml"><style>'+cssEsc+'</style>'+xml+'</div></foreignObject></svg>';
+    const img=new Image();
+    await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)});
+    const c=document.createElement('canvas');c.width=CW;c.height=CH;
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,CW,CH);
+    const r=Math.min(CW/W,CH/H);x.drawImage(img,(CW-W*r)/2,0,W*r,H*r);
+    if(inkOK(c)){c.toDataURL('image/jpeg',0.5);cv=c}
+   }catch(e){cv=null}
+  }
+  if(!cv)cv=await paintSheet(clone,W,H,CW,CH);
+  const url=cv.toDataURL('image/jpeg',0.95);
+  $('#mimg').src=url;
+  const a=$('#mdl');a.href=url;a.download=fname();a.style.display=IOS?'none':'';
+  const sb=$('#mshare');sb.style.display='none';
+  try{
+   const f=dataURLtoFile(url,fname());
+   if(navigator.canShare&&navigator.canShare({files:[f]})){sb.style.display='';sb.onclick=()=>{navigator.share({files:[f],title:fname()}).catch(()=>{})}}
+  }catch(e){}
+  $('#modal').classList.add('show');
+  if(!IOS)a.click();
+ }catch(e){alert('JPG 변환 중 오류가 발생했습니다. 다시 시도해 주세요.\n'+e)}
+ finally{if(host)host.remove()}
+}
+
+/* ---------- 날씨·날짜 자동 기록 ---------- */
+/*WX-START*/
+const r1=x=>Math.round(x*10)/10;
+function kmaFeel(T,RH,V,m){
+ if(m>=5&&m<=9){
+  const Tw=T*Math.atan(0.151977*Math.sqrt(RH+8.313659))+Math.atan(T+RH)-Math.atan(RH-1.676331)+0.00391838*Math.pow(RH,1.5)*Math.atan(0.023101*RH)-4.686035;
+  return -0.2442+0.55399*Tw+0.45535*T-0.0022*Tw*Tw+0.00278*Tw*T+3.0;
+ }
+ const v=V*3.6;
+ if(T<=10&&v>=4.68){const p=Math.pow(v,0.16);return 13.12+0.6215*T-11.37*p+0.3965*p*T}
+ return T;
+}
+function pickWeather(c,feel){
+ const k=c.weather_code;
+ const wet=(k>=51&&k<=67)||(k>=71&&k<=77)||(k>=80&&k<=86)||(k>=95&&k<=99)||c.precipitation>0;
+ if(wet)return '비/눈';
+ if(c.wind_speed_10m>=14||c.wind_gusts_10m>=20)return '강풍';
+ if(feel>=33)return '폭염';
+ if(feel<=-12)return '한파';
+ return '맑음';
+}
+/*WX-END*/
+let lastDay=today(),lastFetch=0,wxBusy=false,wxPending=false;
+function setDate(){$('[data-f=date]').value=today()}
+function clearManual(){$$('[data-f=weather],[data-f=feel],[data-f=air]').forEach(e=>{delete e.dataset.manual})}
+['weather','feel','air'].forEach(k=>{const e=$(`[data-f=${k}]`);['input','change'].forEach(ev=>e.addEventListener(ev,()=>{e.dataset.manual='1'}))});
+const wxStat=t=>{const e=$('#wxStatus');if(e)e.textContent=t};
+function getPos(){
+ const once=hi=>new Promise(res=>{
+  let done=false;const fin=v=>{if(!done){done=true;res(v)}};
+  if(!navigator.geolocation)return fin({ok:false,code:0});
+  setTimeout(()=>fin({ok:false,code:3}),hi?20000:12000);
+  try{navigator.geolocation.getCurrentPosition(p=>fin({ok:true,lat:p.coords.latitude,lon:p.coords.longitude}),e=>fin({ok:false,code:(e&&e.code)||2}),{enableHighAccuracy:hi,timeout:hi?18000:10000,maximumAge:0})}catch(e){fin({ok:false,code:2})}
+ });
+ return once(false).then(r=>(r.ok||r.code===0||r.code===1)?r:once(true));
+}
+const POSMSG={
+ 0:'이 브라우저는 위치 기능을 지원하지 않습니다.',
+ 1:'위치 권한이 꺼져 있습니다. 휴대폰 설정에서 이 앱(브라우저)의 위치를 "허용"으로 바꾼 뒤 다시 불러오기를 눌러 주세요.',
+ 2:'현재 위치를 확인하지 못했습니다. 위치(GPS) 서비스를 켠 뒤 다시 불러오기를 눌러 주세요.',
+ 3:'위치 확인 시간이 초과되었습니다. 다시 불러오기를 눌러 주세요.',
+ 5:'파일로 열어서는 현재 위치를 쓸 수 없습니다. 지역을 직접 선택해 주세요. (https 주소로 열면 자동으로 됩니다)'
+};
+function nearName(lat,lon){
+ let best='',bd=1e9;
+ REGIONS.forEach(g=>g[1].forEach(r=>{
+  const dx=(r[2]-lon)*Math.cos(lat*Math.PI/180)*111.32,dy=(r[1]-lat)*110.57,d=Math.sqrt(dx*dx+dy*dy);
+  if(d<bd){bd=d;best=r[0]}
+ }));
+ return best+(bd<=30?' 부근':'에서 약 '+Math.round(bd)+'km');
+}
+/* 주소(동 단위) 조회: OpenStreetMap Nominatim, 인증키 불필요 / 실패하면 가장 가까운 시·군 이름 사용 */
+const revCache={};
+async function reverseName(lat,lon){
+ const k=lat.toFixed(3)+','+lon.toFixed(3);
+ if(revCache[k])return revCache[k];
+ try{
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),4000);
+  const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&addressdetails=1&accept-language=ko&lat='+lat.toFixed(5)+'&lon='+lon.toFixed(5),{signal:ctl.signal});
+  clearTimeout(tm);
+  const a=(await r.json()).address||{};
+  const seen={};
+  const nm=[a.state||a.province,a.city||a.county||a.town,a.borough||a.city_district,a.suburb||a.neighbourhood||a.quarter||a.village].filter(x=>x&&!seen[x]&&(seen[x]=1)).join(' ');
+  if(nm){revCache[k]=nm;return nm}
+ }catch(e){}
+ return '';
+}
+/* 기상청 격자(nx,ny) 변환 */
+function toGrid(lat,lon){
+ const RE=6371.00877,GRID=5.0,SLAT1=30.0,SLAT2=60.0,OLON=126.0,OLAT=38.0,XO=43,YO=136,D=Math.PI/180;
+ const re=RE/GRID,s1=SLAT1*D,s2=SLAT2*D,ol=OLON*D,oa=OLAT*D;
+ let sn=Math.tan(Math.PI*0.25+s2*0.5)/Math.tan(Math.PI*0.25+s1*0.5);
+ sn=Math.log(Math.cos(s1)/Math.cos(s2))/Math.log(sn);
+ let sf=Math.tan(Math.PI*0.25+s1*0.5);sf=Math.pow(sf,sn)*Math.cos(s1)/sn;
+ let ro=Math.tan(Math.PI*0.25+oa*0.5);ro=re*sf/Math.pow(ro,sn);
+ let ra=Math.tan(Math.PI*0.25+lat*D*0.5);ra=re*sf/Math.pow(ra,sn);
+ let th=lon*D-ol;if(th>Math.PI)th-=2*Math.PI;if(th<-Math.PI)th+=2*Math.PI;th*=sn;
+ return {x:Math.floor(ra*Math.sin(th)+XO+0.5),y:Math.floor(ro-ra*Math.cos(th)+YO+0.5)};
+}
+/* 초단기실황 발표 시각: 매시 40분 이후 해당 시각 자료가 올라옴 (한국시간 기준) */
+function kmaBase(nowMs,back){
+ let t=nowMs+9*3600000;
+ if(new Date(t).getUTCMinutes()<40)t-=3600000;
+ t-=(back||0)*3600000;
+ const d=new Date(t),p=n=>String(n).padStart(2,'0');
+ return {date:d.getUTCFullYear()+p(d.getUTCMonth()+1)+p(d.getUTCDate()),time:p(d.getUTCHours())+'00'};
+}
+const KMA_KEY_DEFAULT='';
+const getKmaKey=()=>{let k='';try{k=localStorage.getItem('riskKmaKey')||''}catch(e){}return (k||KMA_KEY_DEFAULT).trim()};
+const KMA_PROXIES=[u=>u,u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),u=>'https://corsproxy.io/?url='+encodeURIComponent(u),u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u)];
+async function kmaGet(url){
+ let last='';
+ for(let i=0;i<KMA_PROXIES.length;i++){
+  try{
+   const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),8000);
+   const r=await fetch(KMA_PROXIES[i](url),{signal:ctl.signal});clearTimeout(tm);
+   if(!r.ok)throw new Error('HTTP '+r.status);
+   return await r.text();
+  }catch(e){last=String((e&&e.message)||e)}
+ }
+ throw new Error(last||'연결 실패');
+}
+async function fetchKma(loc,key){
+ try{
+  const g=toGrid(loc.lat,loc.lon),sk=key.indexOf('%')>=0?key:encodeURIComponent(key);
+  for(let back=0;back<2;back++){
+   const b=kmaBase(Date.now(),back);
+   const url='https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?serviceKey='+sk+'&pageNo=1&numOfRows=100&dataType=JSON&base_date='+b.date+'&base_time='+b.time+'&nx='+g.x+'&ny='+g.y;
+   const text=await kmaGet(url);
+   let j=null;try{j=JSON.parse(text)}catch(e){}
+   if(!j){return {ok:false,msg:/SERVICE_KEY|NOT_REGISTERED|Unauthorized|인증/i.test(text)?'인증키가 등록되지 않았거나 잘못되었습니다':'응답을 해석하지 못했습니다'}}
+   const h=j.response&&j.response.header;
+   if(!h||h.resultCode!=='00'){
+    if(h&&h.resultCode==='03'&&back===0)continue;
+    return {ok:false,msg:'기상청 응답: '+((h&&h.resultMsg)||'오류')}
+   }
+   const items=[].concat((j.response.body.items||{}).item||[]);
+   const v=c=>{const it=items.find(x=>x.category===c);return it?parseFloat(it.obsrValue):NaN};
+   const T=v('T1H'),RH=isNaN(v('REH'))?50:v('REH'),V=isNaN(v('WSD'))?0:v('WSD'),PTY=isNaN(v('PTY'))?0:v('PTY');
+   if(isNaN(T))return {ok:false,msg:'기온 값이 없습니다'};
+   const feel=r1(kmaFeel(T,RH,V,new Date().getMonth()+1));
+   const w=pickWeather({weather_code:PTY?61:0,precipitation:0,wind_speed_10m:V,wind_gusts_10m:0},feel);
+   return {ok:true,weather:w,feel:feel,air:r1(T),time:b.date.slice(4,6)+'/'+b.date.slice(6,8)+' '+b.time.slice(0,2)+':00',source:'기상청 초단기실황'};
+  }
+  return {ok:false,msg:'기상청 자료가 아직 없습니다'};
+ }catch(e){return {ok:false,msg:'연결 실패: '+String((e&&e.message)||e)}}
+}
+async function fetchOM(loc){
+ let c=null;
+ try{
+  const url='https://api.open-meteo.com/v1/forecast?latitude='+loc.lat.toFixed(2)+'&longitude='+loc.lon.toFixed(2)+'&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,precipitation&wind_speed_unit=ms&timezone=Asia%2FSeoul';
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),10000);
+  const r=await fetch(url,{signal:ctl.signal});clearTimeout(tm);
+  if(!r.ok)throw new Error('http '+r.status);
+  c=(await r.json()).current;
+  if(!c||c.temperature_2m==null)throw new Error('no data');
+ }catch(e){return {ok:false,msg:'날씨를 불러오지 못했습니다. 인터넷 연결을 확인하거나 직접 입력하세요.'}}
+ const T=c.temperature_2m,RH=c.relative_humidity_2m==null?50:c.relative_humidity_2m,V=c.wind_speed_10m||0;
+ const feel=r1(kmaFeel(T,RH,V,new Date().getMonth()+1));
+ return {ok:true,weather:pickWeather(c,feel),feel:feel,air:r1(T),time:String(c.time).slice(5,10).replace('-','/')+' '+String(c.time).slice(11,16),source:'Open-Meteo 예보모델'};
+}
+/* 날씨 가져오기: 인증키가 있으면 기상청 초단기실황, 없거나 실패하면 Open-Meteo */
+async function fetchWx(){
+ const sel=$('#wxRegion').value;
+ let loc;
+ if(sel){const a=sel.split(',');loc={ok:true,lat:parseFloat(a[0]),lon:parseFloat(a[1]),place:a[2]+' (선택 지역)'}}
+ else if(!/^https?:$/.test(location.protocol)){loc={ok:false,code:5}}
+ else{
+  loc=await getPos();
+  if(loc.ok){const nm=await reverseName(loc.lat,loc.lon);loc.place=(nm||nearName(loc.lat,loc.lon))+' (위도 '+loc.lat.toFixed(2)+', 경도 '+loc.lon.toFixed(2)+')'}
+ }
+ if(!loc.ok){showFb()}
+ if(!loc.ok)return {ok:false,msg:(POSMSG[loc.code]||POSMSG[2])+(loc.code===5?'':(window.isSecureContext?'':' 인터넷 주소(https)로 열어야 위치를 쓸 수 있습니다.')+' 아래에서 지역을 직접 선택할 수도 있습니다.')};
+ let r=null,note='';
+ const key=getKmaKey();
+ if(key){const k=await fetchKma(loc,key);if(k.ok)r=k;else note='기상청 연결 실패('+k.msg+') → Open-Meteo로 대체'}
+ if(!r){r=await fetchOM(loc);if(!r.ok)return {ok:false,msg:(note?note+'. ':'')+r.msg}}
+ r.place=loc.place;r.note=note;
+ return r;
+}
+function fillWx(r,force){
+ const set=(k,v)=>{const e=$(`[data-f=${k}]`);if(force)delete e.dataset.manual;if(force||!e.dataset.manual)e.value=v};
+ set('weather',r.weather);set('feel',r.feel);set('air',r.air);
+ lastFetch=Date.now();
+ wxStat(r.place+' · '+r.time+' 기준 ('+(r.source||'')+') 자동 입력'+(r.note?' · '+r.note:''));
+}
+async function autoWeather(force){
+ if(wxBusy){if(force)wxPending=true;return}wxBusy=true;
+ const fields=['weather','feel','air'].map(k=>$(`[data-f=${k}]`));
+ const hadValues=fields.some(e=>e.value);
+ try{
+  wxStat('날씨를 불러오는 중…');
+  const r=await fetchWx();
+  if(!r.ok){
+   if(force)fields.forEach(e=>{e.value='';delete e.dataset.manual});
+   wxStat(r.msg+(!force&&hadValues?' (이전 값 유지)':''));
+   return;
+  }
+  fillWx(r,force);
+ }finally{wxBusy=false;if(wxPending){wxPending=false;autoWeather(true)}}
+}
+/* "날씨 다시 불러오기" 팝업: 확인을 눌러야 기상상황·체감온도·기온만 입력됨 */
+let wxTok=0,wxData=null,wxFb=false;
+function showFb(){wxFb=true;const b=$('#wxRegionBox');if(b)b.style.display=''}
+function wxPop(body,canOk){
+ openDlg('날씨 다시 불러오기',body+(wxFb?'<p>날씨 기준 지역 (위치를 못 쓸 때 직접 선택)</p><select id="wxPopRegion">'+regionOpts+'</select>':'')+'<div class="dbtn"><button type="button" data-a="wxok"'+(canOk?'':' disabled')+'>확인</button><button type="button" class="gray" data-a="close">취소</button></div>');
+ if(wxFb)$('#wxPopRegion').value=$('#wxRegion').value;
+}
+async function showWxPopup(){
+ const tok=++wxTok;wxData=null;
+ wxPop('<p class="hint2">날씨를 불러오는 중…</p>',false);
+ const r=await fetchWx();
+ if(tok!==wxTok)return;
+ if(!r.ok){wxPop('<p class="wxerr">'+esc(r.msg)+'</p>',false);return}
+ wxData=r;
+ wxPop('<div class="wxres"><div><span>현재 지역</span><b>'+esc(r.place)+'</b></div><div><span>기준 시각</span><b>'+esc(r.time)+'</b></div><div><span>자료 출처</span><b>'+esc(r.source||'')+'</b></div><div><span>기상상황</span><b>'+esc(r.weather)+'</b></div><div><span>체감온도</span><b>'+r.feel+' ℃</b></div><div><span>기온</span><b>'+r.air+' ℃</b></div></div>'+(r.note?'<p class="wxerr">'+esc(r.note)+'</p>':'')+'<p class="hint2">확인을 누르면 기상상황·체감온도·기온만 바뀌고, 다른 내용은 그대로 유지됩니다.</p>',true);
+}
+$('#dlg').addEventListener('change',e=>{
+ if(e.target.id!=='wxPopRegion')return;
+ const m=$('#wxRegion');m.value=e.target.value;
+ try{localStorage.setItem('riskRegion',m.value)}catch(_){}
+ showWxPopup();
+});
+$('#wxBtn').addEventListener('click',showWxPopup);
+function dayCheck(){
+ const t=today();
+ if(t!==lastDay){lastDay=t;setDate();autoWeather(false)}
+ else if(!document.hidden&&!wxBusy&&Date.now()-lastFetch>300000)autoWeather(false);
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)dayCheck()});
+addEventListener('focus',dayCheck);
+setInterval(dayCheck,60000);
+try{localStorage.removeItem('riskLoc')}catch(e){}
+function restoreRegion(){
+ const sel=$('#wxRegion');
+ try{const v=localStorage.getItem('riskRegion');if(v&&[...sel.options].some(op=>op.value===v))sel.value=v}catch(e){}
+}
+if(!/^https?:$/.test(location.protocol)){restoreRegion();if($('#wxRegion').value)showFb()}
+$('#wxRegion').addEventListener('change',e=>{try{localStorage.setItem('riskRegion',e.target.value)}catch(_){}showWxPopup()});
+setDate();
+if(/^https?:$/.test(location.protocol))setTimeout(showWxPopup,500);else autoWeather(false);
+
+/* ---------- 저장 / 다른 이름으로 저장 / 불러오기 ---------- */
+let curName='';
+function showName(){const e=$('#curName');if(e)e.textContent=curName?('현재 저장명: '+curName):'현재 저장명: (아직 저장 안 됨)'}
+function getSaves(){
+ try{
+  let s=JSON.parse(localStorage.getItem('riskSaves')||'null');
+  if(!Array.isArray(s)){
+   s=[];
+   const old=localStorage.getItem('riskForm3');
+   if(old){s.push({n:'이전 저장본',d:JSON.parse(old),t:Date.now()});localStorage.setItem('riskSaves',JSON.stringify(s))}
+  }
+  return s;
+ }catch(e){return[]}
+}
+function putSaves(s){try{localStorage.setItem('riskSaves',JSON.stringify(s));return true}catch(e){alert('저장하지 못했습니다. 저장 공간을 확인해 주세요.');return false}}
+function openDlg(title,html){$('#dlgT').textContent=title;$('#dlgB').innerHTML=html;$('#dlg').classList.add('show')}
+function closeDlg(){wxTok++;$('#dlg').classList.remove('show')}
+function fmtT(t){const d=new Date(t),p=n=>String(n).padStart(2,'0');return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes())}
+function doSave(name){
+ name=String(name||'').trim().slice(0,40);
+ if(!name){alert('저장명을 입력해 주세요.');return false}
+ const s=getSaves(),i=s.findIndex(x=>x.n===name);
+ if(i>=0&&name!==curName&&!confirm('"'+name+'" 이름이 이미 있습니다. 덮어쓸까요?'))return false;
+ const rec={n:name,d:collect(),t:Date.now()};
+ if(i>=0)s[i]=rec;else s.push(rec);
+ if(!putSaves(s))return false;
+ curName=name;showName();return true;
+}
+function saveForm(){
+ if(!curName){saveAs();return}
+ if(doSave(curName))wxStat('저장했습니다: '+curName);
+}
+function saveAs(){
+ const s=getSaves().slice().sort((a,b)=>b.t-a.t);
+ const proj=($('[data-f=project]').value||'위험성평가').trim();
+ const def=curName||(proj+'_'+($('[data-f=date]').value||today()));
+ const list=s.length?'<p>기존 저장명 (누르면 이름이 입력됩니다)</p><div class="slist">'+s.map(x=>'<div class="srow"><div class="nm" data-a="pick" data-n="'+esc(x.n)+'">'+esc(x.n)+'<small>'+fmtT(x.t)+' 저장</small></div></div>').join('')+'</div>':'';
+ openDlg('다른 이름으로 저장','<p>저장명</p><input type="text" id="saveName" maxlength="40" value="'+esc(def)+'">'+list+'<div class="dbtn"><button type="button" data-a="dosave">저장</button><button type="button" class="gray" data-a="close">취소</button></div>');
+ const inp=$('#saveName');inp.focus();inp.select();
+}
+function loadForm(){
+ const s=getSaves().slice().sort((a,b)=>b.t-a.t);
+ const body=s.length?'<div class="slist">'+s.map(x=>'<div class="srow"><div class="nm" data-a="load" data-n="'+esc(x.n)+'">'+esc(x.n)+(x.n===curName?' (현재)':'')+'<small>'+fmtT(x.t)+' 저장</small></div><button type="button" data-a="load" data-n="'+esc(x.n)+'">불러오기</button><button type="button" class="del" data-a="del" data-n="'+esc(x.n)+'">삭제</button></div>').join('')+'</div>':'<p>저장된 내용이 없습니다.</p>';
+ openDlg('저장 내용 불러오기',body+'<p class="hint2">불러오면 작성일자와 날씨는 오늘 기준으로 자동 갱신됩니다.</p><div class="dbtn"><button type="button" class="gray" data-a="close">닫기</button></div>');
+}
+function loadByName(n){
+ const x=getSaves().find(v=>v.n===n);if(!x){alert('저장본을 찾을 수 없습니다.');return}
+ apply(x.d);
+ ['weather','feel','air'].forEach(k=>{$('[data-f='+k+']').value=''});
+ clearManual();setDate();autoWeather(true);
+ curName=n;showName();closeDlg();scrollTo(0,0);
+}
+$('#dlg').addEventListener('click',e=>{
+ const t=e.target.closest('[data-a]');
+ if(!t){if(e.target.id==='dlg')closeDlg();return}
+ const a=t.dataset.a,n=t.dataset.n;
+ if(a==='close')closeDlg();
+ else if(a==='pick'){const i=$('#saveName');i.value=n;i.focus()}
+ else if(a==='dosave'){if(doSave($('#saveName').value)){closeDlg();wxStat('저장했습니다: '+curName)}}
+ else if(a==='load')loadByName(n);
+ else if(a==='wxok'){if(wxData){fillWx(wxData,true);closeDlg()}}
+ else if(a==='del'){
+  if(!confirm('"'+n+'" 저장본을 삭제할까요?'))return;
+  putSaves(getSaves().filter(v=>v.n!==n));
+  if(n===curName){curName='';showName()}
+  loadForm();
+ }
+});
+$('#dlg').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='saveName'){e.preventDefault();if(doSave(e.target.value)){closeDlg();wxStat('저장했습니다: '+curName)}}});
+showName();
+
+/* ---------- 브라우저 탭 아이콘 (안전모) ---------- */
+(function(){
+ const HAT=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#1a73e8"/><path d="M108 336C108 214 172 148 256 148C340 148 404 214 404 336Z" fill="#FFC21A"/><rect x="224" y="124" width="64" height="214" rx="22" fill="#F5A800"/><rect x="78" y="326" width="356" height="50" rx="25" fill="#FFC21A" stroke="#E09A00" stroke-width="6"/><path d="M142 300C144 240 176 200 214 182" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="14" stroke-linecap="round"/></svg>`;
+ const l=document.createElement('link');l.rel='icon';l.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(HAT);document.head.appendChild(l);
+})();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
